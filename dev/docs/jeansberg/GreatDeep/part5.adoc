@@ -1,0 +1,127 @@
+= Make a Shooter in Lua/Love2D - Music and Sound Effects
+:keywords: games, gamedev, lua, love2d, software, coding, development, engineering, inclusive, community
+:lang: en
+:toc:
+:toclevels: 3
+:sectnums:
+ifndef::env-github[:icons: font]
+:note-caption: :paperclip:
+:important-caption: :exclamation:
+:warning-caption: :warning:
+
+image:images/title.png[Cover image for Make a Shooter in Lua/Love2D - Music and Sound Effects,width=1000,height=420]
+
+https://dev.to/jeansberg[Jens Genberg] +
+Posted on 24. Juli 2017 +
+https://dev.to/jeansberg/make-a-shooter-in-lualove2d---music-and-sound-effects
+
+Hello, and welcome to the final part of this tutorial! In the link:https://dev.to/jeansberg/make-a-shooter-in-lualove2d---animations-and-particles[last post], we added some visual effects to the game. It won't really feel complete until we add some audio, though. Read on to find out how.
+
+== Loading some files
+
+We will be using the love.audio module to play back sound and music
+files, so the first thing we'll do is load some files into memory. This
+is very similar to loading image files, except we are using objects of
+the type "Source" to store the data.
+
+[source,highlight,lua]
+----
+musicTrack = love.audio.newSource("resources/audio/Mercury.wav", "static")
+musicTrack:setLooping(true)
+shootSfx = love.audio.newSource("resources/audio/Explosion.wav", "static")
+shootSfx:setVolume(0.5)
+enemyDestroySfx = love.audio.newSource("resources/audio/Shoot.wav", "static")
+playerDestroySfx = love.audio.newSource("resources/audio/Lightening.wav", "static")
+----
+
+We call the `newSource()` method and provide the paths to our sound files.
+The second parameter `static` tells `Love2D` to read the whole file into
+memory. It can be omitted for larger files, in order to stream them
+piece by piece. Since the files I'm using are very small, I decided to
+just load all of the data at startup. We want the music track to loop
+and luckily there is a function called `setLooping()` just for that. One
+of the audio files had a higher volume level than the others, so we call
+the `setVolume()` function to bring it in line with the others.
+
+== Playing music
+
+Since there will only ever be one instance of the music track playing,
+handling it won't require much code. All we have to do is call
+`musicTrack:play()` in the `startGame()` method and `musicTrack:stop()`
+when the player is hit and the game ends. That's it!
+
+== Playing sound effects
+
+We need to add a bit more logic for playing sound effects, so I decided
+to create a reusable function.
+
+[source,highlight,lua]
+----
+function playSound(sound)
+  sound:rewind(sound)
+  pitchMod = 0.8 + love.math.random(0, 10)/25
+  sound:setPitch(pitchMod)
+  sound:play()
+end
+----
+
+The `playSound()` function takes a Source object as a parameter. It calls
+the `rewind()` function on the Source, which is needed to get `Love2D` to
+play the sound effect from the start. This probably happens because the
+same Source is used for all instances of a sound.
+
+A trick to add some variety to sound effects is to slightly modify the
+frequency of each sound when it's triggered. We generate a pitchMod
+value between 0.8 and 1.2 and give it to the `setPitch()` function. Then
+we call `sound:play()` just like when starting the music track.
+
+After that it's just a matter of placing calls to `playSound()` at
+appropriate locations in the code.
+
+[source,highlight,lua]
+----
+playerAlive = false
+musicTrack:stop()
+playSound(playerDestroySfx)
+----
+
+Stop the music and play a loud explosion sound when the player is hit by
+an enemy.
+
+[source,highlight,lua]
+----
+table.remove(enemies, index)
+table.remove(torpedoes, index2)
+playSound(enemyDestroySfx)
+----
+
+Play a similar sound when an enemy is hit by a torpedo.
+
+[source,highlight,lua]
+----
+torpedoTimer = torpedoTimerMax
+playSound(shootSfx)
+----
+
+Play a whooshing sound whenever a torpedo is spawned.
+
+== Conclusion
+
+This concludes the series on making a shooter using `Lua`/`Love2D`! I hope
+you have found these posts useful. At some point in the future, I will
+be writing some more advanced tutorials using the same framework. Feel
+free to contact me at any time with questions and comments.
+
+== Links
+
+https://github.com/jeansberg/GreatDeep[Latest source] +
+https://love2d.org/wiki/Main_Page[Love2D wiki] +
+https://www.lua.org/manual/5.1/[Lua reference]
+
+== Credits
+
+* The music track used for this part was made by _SketchyLogic_ and is
+hosted https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles[over
+here].
+* The sound effects are by _bart_ and can be found https://opengameart.org/content/8-bit-platformer-sfx[here].
+
